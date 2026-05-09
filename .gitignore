@@ -431,8 +431,12 @@ build/
 *.gguf
 *.bin
 *.safetensors
-benchmarks/*.json
+# User-generated benchmark output (hostname-tagged like 'mybox-rtx3090-20260508.json')
+# do NOT commit. Reference JSONs (pr-1744-author.json, pestopoppa-epyc.json) ARE tracked.
+benchmarks/*-*-*.json
 !benchmarks/.gitkeep
+!benchmarks/pr-1744-author.json
+!benchmarks/pestopoppa-epyc.json
 .venv/
 .idea/
 .vscode/
