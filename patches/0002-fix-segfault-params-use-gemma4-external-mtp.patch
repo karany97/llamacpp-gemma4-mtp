@@ -1,0 +1,32 @@
+From: pestopoppa <reported in https://github.com/ikawrakow/ik_llama.cpp/pull/1744#issuecomment-4388461769>
+Subject: [PATCH] Fix chicken-and-egg in params_use_gemma4_external_mtp
+
+The `params_base.speculative.type == COMMON_SPECULATIVE_TYPE_MTP` precondition
+is itself set as a *consequence* of this helper returning true (slot init at
+L357 sets it inside the `if (has_external_mtp)` branch). With the precondition
+still in place, the helper always returns false on first request -> downstream
+NULL deref / segfault.
+
+Removing the type check (the `has_mtp` flag plus a `gemma4_mtp` drafter arch
+is sufficient evidence of intent) clears the segfault.
+
+Verified on AMD EPYC 9655 + Gemma 4 31B Q4_K_M target + Q8_0 drafter:
+21.02 t/s with MTP vs 7.05 t/s baseline = 2.98x lossless, 84.3% acceptance.
+
+---
+ examples/server/server-context.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/examples/server/server-context.cpp b/examples/server/server-context.cpp
+--- a/examples/server/server-context.cpp
++++ b/examples/server/server-context.cpp
+@@ -XXX,7 +XXX,6 @@
+ static bool params_use_gemma4_external_mtp(const gpt_params & params_base) {
+     return params_base.has_mtp &&
+-        params_base.speculative.type == COMMON_SPECULATIVE_TYPE_MTP &&
+         model_has_arch(params_base.speculative.model_dft, "gemma4_mtp");
+ }
+--
+NOTE: Line numbers above are placeholders. Apply via the helper script
+`scripts/apply_pestopoppa_fixes.sh` which uses context-based search-and-replace
+rather than line numbers.

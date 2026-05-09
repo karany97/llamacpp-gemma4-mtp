@@ -1,0 +1,32 @@
+From: pestopoppa <https://github.com/ikawrakow/ik_llama.cpp/pull/1744#issuecomment-4388461824>
+Subject: [PATCH] Silence "Oops: tensor with strange name mtp_*.weight" warnings
+
+PR #1744 introduces two non-`blk.*` top-level tensors (`mtp_pre_proj.weight`,
+`mtp_post_proj.weight`) which the size-accounting iteration at
+`src/llama.cpp:2509` doesn't recognize. Cosmetic but noisy.
+
+Defensive: also covers `mtp_centroids` / `mtp_token_ordering` which are
+TENSOR_NOT_REQUIRED in `create_gemma4_mtp_tensors` (absent from current
+Q8_0/F16 drafters, may appear in future variants).
+
+Verified on top of 0f728f380 + the params_use_gemma4_external_mtp fix:
+"Oops: ... mtp_post_proj.weight" / "Oops: ... mtp_pre_proj.weight" both gone.
+
+---
+ src/llama.cpp | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/llama.cpp b/src/llama.cpp
+@@ -2504,6 +2504,12 @@
+         if (name == "output_norm.weight") {
+             continue;
+         }
++        // Top-level (non-blk.*) tensors introduced by Gemma4Assistant (gemma4_mtp arch).
++        // Loaded by create_gemma4_mtp_tensors; not per-layer, so they don't participate in this accounting.
++        if (name == "mtp_pre_proj.weight" || name == "mtp_post_proj.weight" ||
++            name == "mtp_centroids.weight" || name == "mtp_token_ordering.weight") {
++            continue;
++        }
+         auto pos = name.find("blk.");
+         if (pos != 0) {
+             LLAMA_LOG_WARN("Oops: tensor with strange name %s\n", name.c_str());

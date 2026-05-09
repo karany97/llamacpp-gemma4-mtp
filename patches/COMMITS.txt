@@ -1,0 +1,9 @@
+c7eb61f gemma-mtp: build the arch to load the MTP model
+4f17a3d gemma-mtp: fix mtp kv state
+0f728f3 gemma-mtp: refactor some functions and create gguf
+e17643f gemma-mtp: make usable for embeddings models variant
+bb18f8f Merge branch 'main' into feat/gemma-4-mtp
+e40af18 gemma-mtp: fix qwen mtp load in graph split
+57e949c gemma-mtp: refactor tensor creation and adjust output tensor handling
+c14d10d Gemma 4 MTP: improve tensor handling, and adjust split mode logic
+a703033 Merge branch 'main' into feat/gemma-4-mtp

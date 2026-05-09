@@ -427,3 +427,12 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+build/
+*.gguf
+*.bin
+*.safetensors
+benchmarks/*.json
+!benchmarks/.gitkeep
+.venv/
+.idea/
+.vscode/
