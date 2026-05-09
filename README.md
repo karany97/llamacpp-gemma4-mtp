@@ -7,18 +7,18 @@
 | Stack | Gemma 4 MTP support | Status |
 |---|---|---|
 | `ggml-org/llama.cpp` (mainline) | ❌ none | [Issue #22747 open](https://github.com/ggml-org/llama.cpp/issues/22747) — `convert_hf_to_gguf.py` doesn't recognize `Gemma4AssistantForCausalLM` |
-| `ikawrakow/ik_llama.cpp` | 🟡 [PR #1744](https://github.com/ikawrakow/ik_llama.cpp/pull/1744) open since 2026‑05 | Maintainer requested changes; works but has 1 segfault bug + 1 cosmetic warning |
+| `ikawrakow/ik_llama.cpp` | 🟡 [PR #1744](https://github.com/ikawrakow/ik_llama.cpp/pull/1744) open since 2026‑05 | Maintainer requested changes; works but unmerged on `main` |
 | `vllm-project/vllm` | 🟡 [PR #41745](https://github.com/vllm-project/vllm/pull/41745) open | Approved 2026‑05‑05 but unmerged as of 2026‑05‑08; requires Hopper/Blackwell for full speedup |
-| **this repo** | ✅ ready to build & run | PR #1744 + the two community-validated fixes that are still in PR comments only |
+| **this repo** | ✅ ready to build & run | Pinned base SHA + 1 patch + idempotent build/bench/swap-controller scripts |
 
 If you have an RTX 3090 / 3090 Ti / A100 / H100 / EPYC / Apple Silicon and you want **Gemma 4 31B Dense or 26B-A4B MoE running with MTP today, lossless**, this is the shortest path.
 
 ## What you get
 
-- **A 3-patch stack** that turns vanilla `ik_llama.cpp` HEAD into a working Gemma 4 MTP build:
+- **A patch stack** that turns vanilla `ik_llama.cpp` HEAD into a working Gemma 4 MTP build:
   - `patches/0001-PR-1744-gemma4-mtp.patch` — the SamuelOliveirads PR (1193 +/154 -, 22 files)
-  - `patches/0002-fix-segfault-params-use-gemma4-external-mtp.patch` — pestopoppa's chicken-and-egg fix (clears first-request segfault)
-  - `patches/0003-silence-mtp-tensor-name-warnings.patch` — pestopoppa's cosmetic fix (silences four `Oops: tensor with strange name mtp_*.weight` warnings)
+  - `patches/0002-fix-segfault-params-use-gemma4-external-mtp.patch` — pestopoppa's chicken-and-egg fix originally posted as a PR comment. *As of base SHA `9895026` this fix is already inside PR 1744 itself*; the patch is kept as a defensive backup that auto-skips when the bug is absent.
+  - `patches/0003-silence-mtp-tensor-name-warnings.patch` — pestopoppa's cosmetic fix that silences four `Oops: tensor with strange name mtp_*.weight` warnings. *Also already merged into PR 1744 at base SHA `9895026`*; same defensive auto-skip behaviour.
 - **`scripts/apply_patches.sh`** — clones `ik_llama.cpp` at the verified base SHA `9895026` and applies all three patches deterministically
 - **`scripts/build_cuda_windows.ps1`** — builds with CUDA 12.6 + MSVC for SM 8.6 (Ampere) and SM 8.9 (Ada) targets
 - **`scripts/build_cuda_linux.sh`** — builds with CUDA 12.6 + g++ on Ubuntu 22.04 / Fedora / Arch
@@ -128,7 +128,8 @@ Our scripts: MIT. The `ik_llama.cpp` code we patch retains its original MIT lice
 
 ## Status
 
-- 2026-05-08: repo created, PR 1744 patches extracted, two pestopoppa fixes formalized
-- Next: live build + benchmark on dual RTX 3090 (this repo's owner's hardware)
+- 2026-05-08: repo created, PR 1744 packaged, two pestopoppa fixes captured as defensive patches (they're already merged into the PR itself at base SHA `9895026`)
+- 2026-05-08: `apply_patches.sh` validated on Mac (clones + patches in <10s)
+- Next: live CUDA build on Linux/Windows, A/B benchmark vs current llama.cpp baseline on dual RTX 3090
 
 Pull requests welcome — especially benchmarks from hardware not yet covered.

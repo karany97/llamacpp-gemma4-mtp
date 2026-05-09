@@ -42,7 +42,11 @@ else
   err "PR 1744 patch failed to apply cleanly. Likely the base SHA drifted; consider 'git fetch origin pull/1744/head:pr-1744' and merge directly."
 fi
 
-# 3. Apply pestopoppa's segfault fix via in-place edit (more robust than a unified diff)
+# 3. Apply pestopoppa's segfault fix via in-place edit (more robust than a unified diff).
+#    Note: at the verified base SHA 9895026, PR 1744 itself already contains this fix
+#    (pestopoppa's PR-comment fix got merged into the PR). The needle check below is
+#    a true precondition: if the buggy line is absent, the fix is already in and we skip.
+#    The patch remains as a defensive backup against upstream regression.
 log "applying pestopoppa fix #1: params_use_gemma4_external_mtp segfault"
 SERVER_CTX="examples/server/server-context.cpp"
 if grep -q 'params_base.speculative.type == COMMON_SPECULATIVE_TYPE_MTP &&' "$SERVER_CTX"; then
@@ -66,7 +70,9 @@ else
   log "    -> already applied or PR 1744 base shifted; skipping"
 fi
 
-# 4. Apply pestopoppa's tensor-name-warning silence
+# 4. Apply pestopoppa's tensor-name-warning silence.
+#    Same caveat as fix #1 — already in PR 1744 at base SHA 9895026. The needle check
+#    below detects whether the fixed block is already present and skips re-applying.
 log "applying pestopoppa fix #2: silence MTP tensor-name warnings"
 LLAMA_CPP="src/llama.cpp"
 if ! grep -q 'mtp_pre_proj.weight.*mtp_post_proj.weight' "$LLAMA_CPP"; then
