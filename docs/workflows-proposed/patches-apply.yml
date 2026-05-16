@@ -1,0 +1,61 @@
+# Proposed CI workflow — NOT YET ENABLED
+#
+# Why this file lives here (not in .github/workflows/): the gh CLI token
+# used to commit v0.2.0 didn't have the `workflow` scope, so committing
+# directly to `.github/workflows/` was rejected by the GitHub API. The
+# fix is `gh auth refresh -s workflow` on the operator's local machine,
+# then `git mv docs/workflows-proposed/patches-apply.yml
+# .github/workflows/patches-apply.yml && git commit && git push`.
+#
+# Doing it this way keeps the v0.2.0 polish unblocked while making the
+# CI workflow obvious to the next maintainer.
+#
+# Sanity CI: every push that touches patches/ or apply_patches.sh,
+# verify scripts/apply_patches.sh still clones the pinned ik_llama.cpp
+# SHA and applies all three patches with exit code 0. Catches the
+# upstream-rebase-drift failure mode early.
+
+name: Patches apply cleanly
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'patches/**'
+      - 'scripts/apply_patches.sh'
+      - '.github/workflows/patches-apply.yml'
+  pull_request:
+    paths:
+      - 'patches/**'
+      - 'scripts/apply_patches.sh'
+  workflow_dispatch:
+
+jobs:
+  apply-patches:
+    name: Apply on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify scripts/apply_patches.sh is executable
+        run: |
+          test -x scripts/apply_patches.sh
+
+      - name: Apply patches
+        run: |
+          ./scripts/apply_patches.sh
+          test -d build/ik_llama.cpp
+          test -f build/ik_llama.cpp/src/llama-arch.cpp
+
+      - name: Confirm patch markers present
+        run: |
+          # MTP arch enum from PR #1744 should be in the patched tree
+          cd build/ik_llama.cpp
+          grep -r 'GEMMA4_MTP' src/ include/ examples/ | head -3

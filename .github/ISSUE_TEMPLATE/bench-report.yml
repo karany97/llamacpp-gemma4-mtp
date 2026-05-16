@@ -1,0 +1,103 @@
+name: Bench report
+description: Report a Gemma 4 MTP bench result from your hardware (good or bad)
+title: "bench: <hostname> — <model> @ draft-max=<N> — <speedup>×"
+labels: ["bench"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running the harness! Fill in what you have. If anything
+        was odd (acceptance < 50%, speedup < 1.5×, segfault) please attach
+        the verbatim `run_bench.sh` output too.
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      description: One-line, e.g. *"AMD EPYC 9655 (96C, 1.13 TB DDR5) + 2× RTX 3090"*
+      placeholder: "CPU model + core count + RAM + GPU(s)"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Ubuntu 24.04 LTS / Windows 11 / Arch / macOS 14.x ..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build-target
+    attributes:
+      label: Build target
+      options:
+        - CUDA 12.6 Linux x86_64
+        - CUDA 12.6 Windows x86_64
+        - CPU-only Linux
+        - CPU-only macOS arm64
+        - Metal macOS arm64
+        - Other (mention in additional notes)
+    validations:
+      required: true
+
+  - type: input
+    id: target-model
+    attributes:
+      label: Target model
+      placeholder: "gemma-4-31B-it-Q8_0.gguf"
+    validations:
+      required: true
+
+  - type: input
+    id: drafter-model
+    attributes:
+      label: Drafter model
+      placeholder: "gemma-4-31B-it-assistant-Q8_0.gguf"
+    validations:
+      required: true
+
+  - type: input
+    id: draft-max
+    attributes:
+      label: --draft-max
+      placeholder: "3"
+    validations:
+      required: true
+
+  - type: input
+    id: baseline-tps
+    attributes:
+      label: Baseline t/s (no MTP)
+      placeholder: "7.05"
+    validations:
+      required: true
+
+  - type: input
+    id: mtp-tps
+    attributes:
+      label: With-MTP t/s
+      placeholder: "21.02"
+    validations:
+      required: true
+
+  - type: input
+    id: acceptance
+    attributes:
+      label: Acceptance rate
+      placeholder: "0.843"
+    validations:
+      required: true
+
+  - type: textarea
+    id: run-output
+    attributes:
+      label: run_bench.sh output (or JSON path)
+      description: Paste the verbatim terminal output, OR the path to the JSON in your fork if you've already opened a benchmarks PR
+      render: text
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional notes
+      description: Anything unusual — temperatures, thermal throttling, nvidia-smi output, segfaults you worked around, etc.
